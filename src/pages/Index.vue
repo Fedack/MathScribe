@@ -2,6 +2,7 @@
   <q-page class="flex flex-center" padding style="padding-top: 2px">
     <MyScriptJSVueComponent />
   </q-page>
+  <!--I am a comment-->
 </template>
 
 <script>
