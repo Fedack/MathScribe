@@ -1,6 +1,10 @@
 <template>
   <div class="full-width" style="height: 89vh">
-    <div class="flex row full-height q-gutter-sm no-wrap" style="min-height: inherit">
+    <div
+      class="flex row full-height q-gutter-sm"
+      :class="{'no-wrap': mobile != true}"
+      style="min-height: inherit"
+    >
       <div
         class="writing-container shadow-2 col-9"
         touch-action="none"
@@ -17,7 +21,7 @@
         />
       </div>
 
-      <div class="col-3 q-gutter-sm" ref="output">
+      <div class="q-gutter-sm" :class="{'col-3': mobile != true, 'col-auto': mobile}" ref="output">
         <div class="flex row">
           <q-btn label="Solve" @click="convertEditor" />
           <q-space></q-space>
