@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center" padding style="padding-top: 2px">
-    <MyScriptJSVueComponent />
+    <MyScriptJSVueComponent v-on:refresh="refresh" ref="myscript" :key="unique" />
   </q-page>
   <!--I am a comment-->
 </template>
@@ -9,6 +9,11 @@
 import MyScriptJSVueComponent from '../components/MyScriptJSVueComponent'
 export default {
   name: 'PageIndex',
+  data () {
+    return {
+      unique: 12354123
+    }
+  },
   components: {
     MyScriptJSVueComponent
   },
@@ -20,6 +25,9 @@ export default {
 
       // this is actually what the default style-fn does in Quasar
       return { minHeight: offset ? `calc(100vh - ${offset}px)` : '100vh' }
+    },
+    refresh () {
+      this.unique += 1
     }
   }
 }

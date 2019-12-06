@@ -1,10 +1,12 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated v-if="mobile != true">
-      <q-toolbar></q-toolbar>
+      <q-toolbar class="bg-teal-10">
+        <q-btn label="MathScribe" no-caps flat text-color="teal-2" />
+      </q-toolbar>
     </q-header>
 
-    <q-page-container>
+    <q-page-container class="bg-grey-10">
       <router-view />
     </q-page-container>
   </q-layout>

@@ -6,40 +6,53 @@
       style="min-height: inherit"
     >
       <div
-        class="writing-container shadow-2 col-9"
+        class="writing-container shadow-2 col-9 bg-teal-10"
         touch-action="none"
         style="touch-action: none; min-height: 70vh; min-width: 400px"
         ref="editor"
+        v-if="reset"
       >
-        <q-input
-          class="q-mx-sm"
-          borderless
-          readonly
-          v-model="toSend"
-          dense
-          style="display: flex; flex-grow: 1;"
-        />
+        <div
+          class="text-teal-2"
+          style="position: absolute; bottom: 5px; right: 4px; font-size: 18px"
+        >MathScribe</div>
+        <div
+          class="text-teal-2"
+          style="position: absolute; bottom: 5px; left: 4px; font-size: 18px"
+          ref="katexDiv"
+        ></div>
       </div>
 
-      <div class="q-gutter-sm" :class="{'col-3': mobile != true, 'col-auto': mobile}" ref="output">
+      <div class="q-gutter-sm" :class="{'col-3': mobile != true, 'col-11': mobile}" ref="output">
         <div class="flex row">
-          <q-btn label="Solve" @click="convertEditor" />
+          <q-btn color="teal-10" text-color="teal-2" label="Solve" @click="convertEditor" />
           <q-space></q-space>
-          <q-btn v-shortkey="['ctrl', 'z']" @shortkey="undo()" icon="mdi-undo" @click="undo" />
+          <q-btn
+            color="teal-10"
+            text-color="teal-2"
+            v-shortkey="['ctrl', 'z']"
+            @shortkey="undo()"
+            icon="mdi-undo"
+            @click="undo"
+          />
           <q-btn
             v-shortkey="['ctrl', 'shift', 'z']"
             @shortkey="redo()"
             icon="mdi-redo"
             @click="redo"
+            color="teal-10"
+            text-color="teal-2"
           />
           <q-btn
             v-shortkey="['ctrl', 'alt','shift', 'z']"
             @shortkey="clear()"
             icon="mdi-eraser"
             @click="clear"
+            color="teal-10"
+            text-color="teal-2"
           />
-          <q-btn icon="mdi-key" @click="keyDialog = true" />
-          <q-btn icon="mdi-refresh" @click="refresh" />
+          <q-btn color="teal-10" text-color="teal-2" icon="mdi-key" @click="keyDialog = true" />
+          <q-btn color="teal-10" text-color="teal-2" icon="mdi-refresh" @click="refresh" />
         </div>
         <q-scroll-area
           class="full-width full-height"
@@ -47,7 +60,7 @@
           v-if="this.$q.platform.is.mobile != true"
         >
           <div v-if="outPut !== ''" class="q-gutter-sm q-px-sm">
-            <q-card v-for="pod in outPut.queryresult.pods" :key="pod.id">
+            <q-card v-for="pod in outPut.queryresult.pods" :key="pod.id" class="bg-grey-2">
               <q-card-section>{{pod.title}}</q-card-section>
               <div v-if="pod.subpods.length > 0">
                 <q-card-section v-for="subpod in pod.subpods" :key="subpod.title">
@@ -59,6 +72,7 @@
         </q-scroll-area>
       </div>
     </div>
+
     <q-dialog
       v-model="dialog"
       persistent
@@ -66,7 +80,7 @@
       transition-show="slide-up"
       transition-hide="slide-down"
     >
-      <q-card class="bg-primary text-white">
+      <q-card class="bg-grey-10 text-teal-2">
         <q-bar>
           <q-space />
 
@@ -95,7 +109,7 @@
 
         <q-card-section>
           <div v-if="outPut !== ''" class="q-gutter-sm q-px-sm">
-            <q-card v-for="pod in outPut.queryresult.pods" :key="pod.id">
+            <q-card v-for="pod in outPut.queryresult.pods" :key="pod.id" class="bg-grey-2">
               <q-card-section style="color: black">{{pod.title}}</q-card-section>
               <div v-if="pod.subpods.length > 0">
                 <q-card-section v-for="subpod in pod.subpods" :key="subpod.title">
@@ -110,7 +124,7 @@
     <q-dialog v-model="keyDialog">
       <q-card>
         <q-card-section>
-          <p>This program requires you to enter an API key for Wolfram.</p>
+          <p>This program requires you to enter an API key for Wolfram and Myscript.</p>
           <p>
             Register on
             <a
@@ -118,9 +132,18 @@
               target="_blank"
             >Wolfram</a> and once logged in, under My Apps click on Get an AppID. Follow the instructions and enter your App ID below.
           </p>
+          <p>
+            Then register on
+            <a
+              href="https://developer.myscript.com/getting-started/web"
+              target="_blank"
+            >Myscript</a> and follow the instruction. Retrieve your AppKey and HMAC from the email sent. This app implement web, so keep it checked.
+          </p>
         </q-card-section>
         <q-card-section>
-          <q-input v-model="wolframkey" hint="App ID" />
+          <q-input v-model="wolframkey" hint="Wolfram App ID" />
+          <q-input v-model="myscriptAppKey" hint="Myscript AppKey" />
+          <q-input v-model="myscriptHmac" hint="Myscript HMAC" />
         </q-card-section>
         <q-card-actions align="right" class="bg-white text-primary">
           <q-btn flat label="OK" @click="setWolframKey" v-close-popup />
@@ -132,6 +155,7 @@
 
 <script>
 import * as MyScriptJS from 'myscript'
+import katex from 'katex'
 import axios from 'axios'
 import Cookies from 'js-cookie'
 export default {
@@ -146,21 +170,54 @@ export default {
       maximizedToggle: true,
       dialog: false,
       keyDialog: false,
-      wolframkey: ''
+      wolframkey: '',
+      myscriptAppKey: '',
+      myscriptHmac: '',
+      reset: true,
+      formula: '\\sqrt{\\dfrac{5x}{2}}'
     }
+  },
+  components: {
   },
   created () {
     // eslint-disable-next-line
+  },
+  watch: {
+    toSend: function () {
+      if (this.mobile) {
+        katex.render(this.toSend, this.$refs.katexDiv, { output: 'html' })
+      } else {
+        katex.render(this.toSend, this.$refs.katexDiv, { output: 'mathml' })
+      }
+    }
   },
   mounted () {
     // Fired every second, should always be true
     // eslint-disable-next-line
     this.mobile = this.$q.platform.is.mobile
-    var currentkey = Cookies.get('wolframkey')
-    if (currentkey) {
+    if (this.mobile) {
+      katex.render(this.toSend, this.$refs.katexDiv, { output: 'html' })
+    } else {
+      katex.render(this.toSend, this.$refs.katexDiv, { output: 'mathml' })
+    }
+    var currentwolfram = Cookies.get('wolframkey')
+    var currentmyscript = Cookies.get('myscriptkey')
+    var currenthmac = Cookies.get('myscripthmac')
+    if (currentwolfram && currentmyscript && currenthmac) {
       this.wolframkey = Cookies.get('wolframkey')
+      this.myscriptAppKey = Cookies.get('myscriptkey')
+      this.myscriptHmac = Cookies.get('myscripthmac')
+      Cookies.set('wolframkey', this.wolframkey, { expires: 365 })
+      Cookies.set('myscriptkey', this.myscriptAppKey, { expires: 365 })
+      Cookies.set('myscripthmac', this.myscriptHmac, { expires: 365 })
     } else {
       this.keyDialog = true
+    }
+    var theme = {
+      ink: { // The default ink color if the penStyle wasn't set
+        color: '#b2dfdb',
+        '-myscript-pen-fill-color': '#b2dfdb00'
+      }
     }
     MyScriptJS.register(this.$refs.editor, {
       recognitionParams: {
@@ -172,15 +229,18 @@ export default {
         apiVersion: 'V4',
         server: {
           scheme: 'https',
-          host: 'webdemoapi.myscript.com',
-          applicationKey: 'f1355ec8-c74a-4da9-8d63-691ab05952eb',
-          hmacKey: '752acf37-5a45-481b-9361-fcb32cd7f6a1'
+          host: 'cloud.myscript.com',
+          applicationKey: this.myscriptAppKey,
+          hmacKey: this.myscriptHmac,
+          websocket: {
+            autoReconnect: true
+          }
         },
         v4: {
           math: { mimeTypes: ['application/x-latex'] }
         }
       }
-    })
+    }, { color: '#b2dfdb' }, theme)
     var thisVue = this
     this.$refs.editor.addEventListener('exported', function (evt) {
       if (evt.detail) {
@@ -193,9 +253,11 @@ export default {
   methods: {
     setWolframKey () {
       Cookies.set('wolframkey', this.wolframkey, { expires: 365 })
+      Cookies.set('myscriptkey', this.myscriptAppKey, { expires: 365 })
+      Cookies.set('myscripthmac', this.myscriptHmac, { expires: 365 })
+      this.refresh()
     },
     convertEditor () {
-      console.log(this.$refs.editor)
       var thisVue = this
       this.$refs.editor.editor.export_()
       if (this.wolframkey !== '') {
@@ -234,25 +296,7 @@ export default {
       this.$refs.editor.editor.clear()
     },
     refresh () {
-      MyScriptJS.register(this.$refs.editor, {
-        recognitionParams: {
-          triggers: {
-            exportContent: 'DEMAND'
-          },
-          type: 'MATH',
-          protocol: 'WEBSOCKET',
-          apiVersion: 'V4',
-          server: {
-            scheme: 'https',
-            host: 'webdemoapi.myscript.com',
-            applicationKey: 'f1355ec8-c74a-4da9-8d63-691ab05952eb',
-            hmacKey: '752acf37-5a45-481b-9361-fcb32cd7f6a1'
-          },
-          v4: {
-            math: { mimeTypes: ['application/x-latex'] }
-          }
-        }
-      })
+      this.$emit('refresh')
     }
   }
 }
@@ -261,6 +305,7 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
 @import url("https://cdnjs.cloudflare.com/ajax/libs/myscript/4.3.0/myscript.min.css");
+@import url("https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css");
 h1,
 h2 {
   font-weight: normal;
