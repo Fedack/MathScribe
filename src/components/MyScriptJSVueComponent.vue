@@ -25,15 +25,21 @@
         <div class="flex row">
           <q-btn label="Solve" @click="convertEditor" />
           <q-space></q-space>
-          <q-btn v-shortkey="['ctrl', 'z']" @shortkey="undo()" label="Undo" @click="undo" />
-          <q-btn v-shortkey="['ctrl', 'shift', 'z']" @shortkey="redo()" label="Redo" @click="redo" />
+          <q-btn v-shortkey="['ctrl', 'z']" @shortkey="undo()" icon="mdi-undo" @click="undo" />
+          <q-btn
+            v-shortkey="['ctrl', 'shift', 'z']"
+            @shortkey="redo()"
+            icon="mdi-redo"
+            @click="redo"
+          />
           <q-btn
             v-shortkey="['ctrl', 'alt','shift', 'z']"
             @shortkey="clear()"
-            label="Clear"
+            icon="mdi-eraser"
             @click="clear"
           />
-          <q-btn label="Key" @click="keyDialog = true" />
+          <q-btn icon="mdi-key" @click="keyDialog = true" />
+          <q-btn icon="mdi-refresh" @click="refresh" />
         </div>
         <q-scroll-area
           class="full-width full-height"
@@ -226,6 +232,27 @@ export default {
     },
     clear () {
       this.$refs.editor.editor.clear()
+    },
+    refresh () {
+      MyScriptJS.register(this.$refs.editor, {
+        recognitionParams: {
+          triggers: {
+            exportContent: 'DEMAND'
+          },
+          type: 'MATH',
+          protocol: 'WEBSOCKET',
+          apiVersion: 'V4',
+          server: {
+            scheme: 'https',
+            host: 'webdemoapi.myscript.com',
+            applicationKey: 'f1355ec8-c74a-4da9-8d63-691ab05952eb',
+            hmacKey: '752acf37-5a45-481b-9361-fcb32cd7f6a1'
+          },
+          v4: {
+            math: { mimeTypes: ['application/x-latex'] }
+          }
+        }
+      })
     }
   }
 }

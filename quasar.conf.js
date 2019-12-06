@@ -18,7 +18,7 @@ module.exports = function (ctx) {
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
-      // 'mdi-v4',
+      'mdi-v4',
       // 'fontawesome-v5',
       // 'eva-icons',
       // 'themify',
@@ -140,7 +140,8 @@ module.exports = function (ctx) {
 
     // https://quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
     cordova: {
-      // id: 'fedack.mathscribe.app',
+      id: 'fedack.mathscribe.app',
+      backButtonExit: true
       // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
     },
 
