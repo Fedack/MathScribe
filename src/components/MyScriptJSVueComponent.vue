@@ -33,6 +33,7 @@
             label="Clear"
             @click="clear"
           />
+          <q-btn label="Key" @click="keyDialog = true" />
         </div>
         <q-scroll-area
           class="full-width full-height"
@@ -100,12 +101,33 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="keyDialog">
+      <q-card>
+        <q-card-section>
+          <p>This program requires you to enter an API key for Wolfram.</p>
+          <p>
+            Register on
+            <a
+              href="http://developer.wolframalpha.com/portal/myapps/index.html"
+              target="_blank"
+            >Wolfram</a> and once logged in, under My Apps click on Get an AppID. Follow the instructions and enter your App ID below.
+          </p>
+        </q-card-section>
+        <q-card-section>
+          <q-input v-model="wolframkey" hint="App ID" />
+        </q-card-section>
+        <q-card-actions align="right" class="bg-white text-primary">
+          <q-btn flat label="OK" @click="setWolframKey" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script>
 import * as MyScriptJS from 'myscript'
 import axios from 'axios'
+import Cookies from 'js-cookie'
 export default {
   name: 'MyScriptJSVueComponent',
   data () {
@@ -116,18 +138,24 @@ export default {
       outPut: '',
       mobile: false,
       maximizedToggle: true,
-      dialog: false
+      dialog: false,
+      keyDialog: false,
+      wolframkey: ''
     }
   },
   created () {
     // eslint-disable-next-line
-    console.log("Created" + this.$refs['editor']);
   },
   mounted () {
     // Fired every second, should always be true
     // eslint-disable-next-line
     this.mobile = this.$q.platform.is.mobile
-    console.log('Mounted ' + this.$refs['editor'])
+    var currentkey = Cookies.get('wolframkey')
+    if (currentkey) {
+      this.wolframkey = Cookies.get('wolframkey')
+    } else {
+      this.keyDialog = true
+    }
     MyScriptJS.register(this.$refs.editor, {
       recognitionParams: {
         triggers: {
@@ -157,20 +185,38 @@ export default {
     })
   },
   methods: {
+    setWolframKey () {
+      Cookies.set('wolframkey', this.wolframkey, { expires: 365 })
+    },
     convertEditor () {
       console.log(this.$refs.editor)
       var thisVue = this
       this.$refs.editor.editor.export_()
-      var key = 'G553P2-PVPA6WV44G'
-
-      axios.get('https://cors-anywhere.herokuapp.com/http://api.wolframalpha.com/v2/query?podstate=Result__Step-by-step+solution', {
-        params: { appid: key, input: this.toSend, output: 'json' } }).then(function (response) {
-        console.log(response.data)
-        thisVue.outPut = response.data
-        if (thisVue.mobile) {
-          thisVue.dialog = true
-        }
-      }).catch(error => { console.log(error) })
+      if (this.wolframkey !== '') {
+        axios.get('https://cors-anywhere.herokuapp.com/http://api.wolframalpha.com/v2/query?podstate=Result__Step-by-step+solution', {
+          params: { appid: this.wolframkey, input: this.toSend, output: 'json' } }).then(function (response) {
+          console.log(response.data)
+          thisVue.outPut = response.data
+          if (thisVue.mobile) {
+            thisVue.dialog = true
+          }
+          if (response.data.queryresult.success === false) {
+            thisVue.$q.notify({
+              message: 'Invalid Query',
+              color: 'red',
+              position: 'top'
+            })
+          }
+        }).catch(error => {
+          console.log(error)
+          this.$q.notify({
+            message: error,
+            color: 'red'
+          })
+        })
+      } else {
+        this.keyDialog = true
+      }
     },
     undo () {
       this.$refs.editor.editor.undo()
