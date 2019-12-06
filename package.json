@@ -20,6 +20,7 @@
     "@quasar/extras": "^1.0.0",
     "axios": "^0.18.1",
     "cors": "^2.8.5",
+    "firebase": "^7.5.0",
     "myscript": "^4.3.0",
     "pepjs": "^0.5.2",
     "quasar": "^1.0.0",

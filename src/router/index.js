@@ -4,7 +4,8 @@ import VueRouter from 'vue-router'
 import routes from './routes'
 
 Vue.use(VueRouter)
-
+Vue.use(require('vue-shortkey'))
+Vue.use(require('firebase/app'))
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation

@@ -1,6 +1,6 @@
 <template>
   <div class="full-width" style="height: 89vh">
-    <div class="flex row full-height q-gutter-sm" style="min-height: inherit">
+    <div class="flex row full-height q-gutter-sm no-wrap" style="min-height: inherit">
       <div
         class="writing-container shadow-2 col-9"
         touch-action="none"
@@ -17,7 +17,7 @@
         />
       </div>
 
-      <div class="col-auto q-gutter-sm" ref="output">
+      <div class="col-3 q-gutter-sm" ref="output">
         <div class="flex row">
           <q-btn label="Solve" @click="convertEditor" />
           <q-space></q-space>
@@ -163,7 +163,9 @@ export default {
         params: { appid: key, input: this.toSend, output: 'json' } }).then(function (response) {
         console.log(response.data)
         thisVue.outPut = response.data
-        thisVue.dialog = true
+        if (thisVue.mobile) {
+          thisVue.dialog = true
+        }
       }).catch(error => { console.log(error) })
     },
     undo () {
